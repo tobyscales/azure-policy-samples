@@ -1,0 +1,135 @@
+{
+  "properties": {
+    "displayName": "Security - Force Activity Logs to a Shared Event Hub.",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensures that Activity Log Diagnostics settings are set to push logs into Event Hub",
+    "parameters": {
+      "eventHubName": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Destination Event Hub for Activity Logs",
+          "description": "Select an Event Hub from the dropdown list",
+          "strongType": "Microsoft.EventHub/namespaces"
+        }
+      },
+      "eventHubAuthorizationRule": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Choose an Authorization Rule for EventHub",
+          "description": "Select an Event Hub Authorization Rule from the list",
+          "strongType": "Microsoft.EventHub/Namespaces/AuthorizationRules"
+        }
+      },
+      "diagnosticsSettingsName": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Prefix for deployed diagnosticSettings object.",
+          "description": "First 8 characters of subscription name will be postpended; e.g. logs2eh-sub12345678"
+        },
+        "defaultValue": "logs2eh-"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "matchInsensitively": "Microsoft.Resources/subscriptions"
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Insights/diagnosticSettings",
+          "deploymentScope": "subscription",
+          "existenceScope": "subscription",
+          "name": "[concat(parameters('diagnosticsSettingsName'),take(subscription().subscriptionId,8))]",
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+          ],
+          "deployment": {
+            "location": "westus2",
+            "properties": {
+              "mode": "Incremental",
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "diagnosticsSettingsName": {
+                    "type": "string",
+                    "defaultValue": "actLog-sub"
+                  },
+                  "eventHubName": {
+                    "type": "string"
+                  },
+                  "eventHubAuthRule": {
+                    "type": "string"
+                  }
+                },
+                "variables": {
+                  "diagnosticsName": "[concat(parameters('diagnosticsSettingsName'),take(subscription().subscriptionId,8))]"
+                },
+                "resources": [
+                  {
+                    "name": "[variables('diagnosticsName')]",
+                    "type": "Microsoft.Insights/diagnosticSettings",
+                    "apiVersion": "2017-05-01-preview",
+                    "location": "Global",
+                    "properties": {
+                      "eventHubName": "[parameters('eventHubName')]",
+                      "eventHubAuthorizationRuleId": "[parameters('eventHubAuthRule')]",
+                      "logs": [
+                        {
+                          "category": "Administrative",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Security",
+                          "enabled": true
+                        },
+                        {
+                          "category": "ServiceHealth",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Alert",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Recommendation",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Policy",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Autoscale",
+                          "enabled": true
+                        },
+                        {
+                          "category": "ResourceHealth",
+                          "enabled": true
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "outputs": {}
+              },
+              "parameters": {
+                "eventHubName": {
+                  "value": "[parameters('eventHubName')]"
+                },
+                "eventHubAuthRule": {
+                  "value": "[parameters('eventHubAuthorizationRule')]"
+                },
+                "diagnosticsSettingsName": {
+                  "value": "[parameters('diagnosticsSettingsName')]"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

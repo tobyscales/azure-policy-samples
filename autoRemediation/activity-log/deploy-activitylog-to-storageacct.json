@@ -1,0 +1,120 @@
+{
+  "properties": {
+    "displayName": "Security - Force Activity Logs to a Shared Log Analytics Workspace.",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Ensures that Activity Log Diagnostics settings are set to push logs into Log Analytics",
+    "parameters": {
+      "storageId": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Storage Account for Activity Logs",
+          "description": "Select target Storage Account from dropdown list",
+          "strongType": "storageaccount"
+        }
+      },
+      "diagnosticsSettingsName": {
+        "type": "String",
+        "defaultValue": "logs2storage-",
+        "metadata": {
+          "displayName": "Prefix for deployed diagnosticSettings object.",
+          "description": "First 8 characters of subscription name will be postpended; e.g. logs2storage-sub12345678"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "matchInsensitively": "Microsoft.Resources/subscriptions"
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Insights/diagnosticSettings",
+          "deploymentScope": "Subscription",
+          "existenceScope": "Subscription",
+          "name": "[concat(parameters('diagnosticsSettingsName'),take(subscription().subscriptionId,8))]",
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+          ],
+          "deployment": {
+            "location": "westus2",
+            "properties": {
+              "mode": "Incremental",
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "diagnosticsSettingsName": {
+                    "type": "string",
+                    "defaultValue": "actLog-sub"
+                  },
+                  "storageId": {
+                    "type": "string"
+                  }
+                },
+                "variables": {
+                  "diagnosticsName": "[concat(parameters('diagnosticsSettingsName'),take(subscription().subscriptionId,8))]"
+                },
+                "resources": [
+                  {
+                    "name": "[variables('diagnosticsName')]",
+                    "type": "Microsoft.Insights/diagnosticSettings",
+                    "apiVersion": "2017-05-01-preview",
+                    "location": "Global",
+                    "properties": {
+                      "storageId": "[parameters('storageId')]",
+                      "logs": [
+                        {
+                          "category": "Administrative",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Security",
+                          "enabled": true
+                        },
+                        {
+                          "category": "ServiceHealth",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Alert",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Recommendation",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Policy",
+                          "enabled": true
+                        },
+                        {
+                          "category": "Autoscale",
+                          "enabled": true
+                        },
+                        {
+                          "category": "ResourceHealth",
+                          "enabled": true
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "outputs": {}
+              },
+              "parameters": {
+                "storageId": {
+                  "value": "[parameters('storageId')]"
+                },
+                "diagnosticsSettingsName": {
+                  "value": "[parameters('diagnosticsSettingsName')]"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
