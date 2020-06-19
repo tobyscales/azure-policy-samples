@@ -1,0 +1,93 @@
+{
+    "properties": {
+        "displayName": "Add or replace a tag on a subscription.",
+        "policyType": "Custom",
+        "mode": "all",
+        "description": "Adds or replaces the specified tag and value when any resource group is created or updated. Existing resource groups can be remediated by triggering a remediation task.",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Tags"
+        },
+        "parameters": {
+            "tagName": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Tag Name",
+                    "description": "Name of the tag, such as 'environment'"
+                }
+            },
+            "tagValue": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Tag Value",
+                    "description": "Value of the tag, such as 'production'"
+                }
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "value": "[subscription().tags[parameters('tagName')]]",
+                        "notEquals": "[parameters('tagName')]"
+                    },
+                    {
+                        "field": "type",
+                        "matchInsensitively": "Microsoft.Resources/subscriptions"
+                    }
+                ]
+            },
+            "then": {
+                "effect": "deployIfNotExists",
+                "details": {
+                    "type": "Microsoft.Resources/subscriptions",
+                    "deploymentScope": "subscription",
+                    "existenceScope": "subscription",
+                    "roleDefinitionIds": [
+                        "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+                    ],
+                    "deployment": {
+                        "location": "westus2",
+                        "properties": {
+                            "mode": "incremental",
+                            "parameters": {
+                                "tagName": {
+                                    "value": "[parameters('tagName')]"
+                                },
+                                "tagValue": {
+                                    "value": "[parameters('tagValue')]"
+                                }
+                            },
+                            "template": {
+                                "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                                "contentVersion": "1.0.0.0",
+                                "parameters": {
+                                    "tagName": {
+                                        "type": "string"
+                                    },
+                                    "tagValue": {
+                                        "type": "string"
+                                    }
+                                },
+                                "variables": {},
+                                "resources": [
+                                    {
+                                        "type": "Microsoft.Resources/tags",
+                                        "name": "default",
+                                        "apiVersion": "2019-10-01",
+                                        "dependsOn": [],
+                                        "properties": {
+                                            "tags": {
+                                                "[parameters('tagName')]": "[parameters('tagValue')]"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

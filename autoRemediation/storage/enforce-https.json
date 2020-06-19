@@ -1,0 +1,93 @@
+{
+  "properties": {
+    "displayName": "deploy HTTPS storage",
+    "policyType": "Custom",
+    "mode": "All",
+    "metadata": {
+      "version": "2.0.0",
+      "category": "Toby"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Storage/storageAccounts"
+          },
+          {
+            "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
+            "equals": "false"
+          }
+        ]
+      },
+      "then": {
+        "effect": "DeployIfNotExists",
+        "details": {
+          "type": "Microsoft.Storage/storageAccounts",
+          "name": "[field('name')]",
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+          ],
+          "existenceCondition": {
+            "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
+            "equals": "true"
+        },
+          "deployment": {
+            "properties": {
+              "mode": "incremental",
+              "parameters": {
+                "storageAccountName": {
+                  "value": "[field('name')]"
+                },
+                "location": {
+                  "value": "[field('location')]"
+                },
+                "storageAccountType": {
+                  "value": "[field('Microsoft.Storage/storageAccounts/sku.name')]"
+                },
+                "storageAccountKind": {
+                  "value": "[field('kind')]"
+                }
+              },
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "storageAccountName": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "storageAccountType": {
+                    "type": "string"
+                  },
+                  "storageAccountKind": {
+                    "type": "string"
+                  }
+                },
+                "variables": {},
+                "resources": [
+                  {
+                    "type": "Microsoft.Storage/storageAccounts",
+                    "name": "[parameters('storageAccountName')]",
+                    "apiVersion": "2019-06-01",
+                    "location": "[parameters('location')]",
+                    "sku": {
+                      "name": "[parameters('storageAccountType')]"
+                    },
+                    "kind": "[parameters('storageAccountKind')]",
+                    "properties": {
+                      "supportsHttpsTrafficOnly": true
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
