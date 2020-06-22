@@ -38,7 +38,7 @@
       "then": {
         "effect": "deployIfNotExists",
         "details": {
-          "type": "Microsoft.Insights/diagnosticSettings",
+          "type": "Microsoft.Resources/subscriptions",
           "deploymentScope": "subscription",
           "existenceScope": "subscription",
           "name": "[concat(parameters('diagnosticsSettingsName'),take(subscription().subscriptionId,8))]",
