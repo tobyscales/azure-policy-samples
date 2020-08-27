@@ -7,7 +7,16 @@
       "version": "2.0.0",
       "category": "Toby"
     },
-    "parameters": {},
+    "parameters": {
+      "mode": {
+        "type": "string",
+        "defaultValue": "enable",
+        "allowedValues": [
+          "enable",
+          "disable"
+        ]
+      }
+    },
     "policyRule": {
       "if": {
         "allOf": [
@@ -32,7 +41,7 @@
           "existenceCondition": {
             "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
             "equals": "true"
-        },
+          },
           "deployment": {
             "properties": {
               "mode": "incremental",
@@ -48,6 +57,9 @@
                 },
                 "storageAccountKind": {
                   "value": "[field('kind')]"
+                },
+                "mode": {
+                  "value": "[parameters('mode')]"
                 }
               },
               "template": {
@@ -65,9 +77,14 @@
                   },
                   "storageAccountKind": {
                     "type": "string"
+                  },
+                  "mode": {
+                    "type": "string"
                   }
                 },
-                "variables": {},
+                "variables": {
+                  "httpSetting": "[if(equals(variables('mode'),'enable'), bool('true'), bool('false'))]"
+                },
                 "resources": [
                   {
                     "type": "Microsoft.Storage/storageAccounts",
@@ -79,7 +96,7 @@
                     },
                     "kind": "[parameters('storageAccountKind')]",
                     "properties": {
-                      "supportsHttpsTrafficOnly": true
+                      "supportsHttpsTrafficOnly": "[variables('httpSetting')]"
                     }
                   }
                 ]
